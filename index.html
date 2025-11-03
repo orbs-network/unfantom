@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Unfantom DeFi Interface</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 100%);
+            color: #e0e0e0;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: rgba(20, 25, 45, 0.95);
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-size: 2.5em;
+        }
+
+        .section {
+            margin-bottom: 25px;
+        }
+
+        .section-title {
+            font-size: 1.1em;
+            margin-bottom: 12px;
+            color: #a0a0a0;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 600;
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 6px;
+            color: #9ca3af;
+            font-size: 0.9em;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            background: rgba(30, 35, 55, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            color: #e0e0e0;
+            font-size: 1em;
+            transition: all 0.3s ease;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 15px rgba(102, 126, 234, 0.3);
+        }
+
+        input[type="text"]::placeholder {
+            color: #6b7280;
+        }
+
+        .button {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .button:hover::before {
+            left: 100%;
+        }
+
+        .button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        .button:active {
+            transform: translateY(0);
+        }
+
+        .button:disabled {
+            background: #4a5568;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .button:disabled:hover {
+            transform: none;
+            box-shadow: none;
+        }
+
+        .button-secondary {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        .button-success {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+
+        .balances {
+            background: rgba(30, 35, 55, 0.6);
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .balance-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .balance-item:last-child {
+            border-bottom: none;
+        }
+
+        .token-name {
+            font-weight: 600;
+            color: #e0e0e0;
+        }
+
+        .token-balance {
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .status {
+            text-align: center;
+            padding: 12px;
+            margin-top: 20px;
+            border-radius: 8px;
+            font-size: 0.9em;
+        }
+
+        .status.info {
+            background: rgba(66, 153, 225, 0.2);
+            color: #4299e1;
+            border: 1px solid rgba(66, 153, 225, 0.3);
+        }
+
+        .status.success {
+            background: rgba(72, 187, 120, 0.2);
+            color: #48bb78;
+            border: 1px solid rgba(72, 187, 120, 0.3);
+        }
+
+        .status.error {
+            background: rgba(245, 101, 101, 0.2);
+            color: #f56565;
+            border: 1px solid rgba(245, 101, 101, 0.3);
+        }
+
+        .wallet-address {
+            text-align: center;
+            margin-top: 15px;
+            padding: 10px;
+            background: rgba(102, 126, 234, 0.1);
+            border-radius: 8px;
+            font-size: 0.85em;
+            word-break: break-all;
+            color: #a0a0a0;
+        }
+
+        .button-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 25px;
+            }
+
+            h1 {
+                font-size: 2em;
+            }
+
+            .button-group {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🌟 Unfantom DeFi</h1>
+        
+        <div class="section">
+            <button id="connectBtn" class="button">Connect to MetaMask</button>
+            <div id="walletAddress" class="wallet-address" style="display: none;"></div>
+        </div>
+
+        <div id="balancesSection" class="section" style="display: none;">
+            <div class="section-title">Your Balances</div>
+            <div class="balances">
+                <div class="balance-item">
+                    <span class="token-name">FTM (Native)</span>
+                    <span id="ftmBalance" class="token-balance">0.00</span>
+                </div>
+                <div class="balance-item">
+                    <span class="token-name">ORBS</span>
+                    <span id="orbsBalance" class="token-balance">0.00</span>
+                </div>
+                <div class="balance-item">
+                    <span class="token-name">axlUSDC</span>
+                    <span id="axlusdcBalance" class="token-balance">0.00</span>
+                </div>
+                <div class="balance-item">
+                    <span class="token-name">WFTM</span>
+                    <span id="wftmBalance" class="token-balance">0.00</span>
+                </div>
+            </div>
+        </div>
+
+        <div id="inputsSection" class="section" style="display: none;">
+            <div class="section-title">Transaction Details</div>
+            <div class="input-group">
+                <label for="lpAddress">LP ERC20 Token Address</label>
+                <input type="text" id="lpAddress" placeholder="0x..." />
+            </div>
+            <div class="input-group">
+                <label for="routerAddress">Router Address (Spender)</label>
+                <input type="text" id="routerAddress" placeholder="0x..." />
+            </div>
+        </div>
+
+        <div id="actionsSection" class="button-group" style="display: none;">
+            <button id="approveBtn" class="button button-secondary">Approve</button>
+            <button id="sendBtn" class="button button-success">Send</button>
+        </div>
+
+        <div id="status" class="status" style="display: none;"></div>
+    </div>
+
+    <script>
+        // Token addresses on Fantom network
+        const TOKEN_ADDRESSES = {
+            ORBS: '0x3E01B7E242D5AF8064cB9A8F9468aC0f8683617c',
+            axlUSDC: '0x1B6382DBDEa11d97f24495C9A90b7c88469134a4',
+            WFTM: '0x21be370D5312f44cB42ce377BC9b8a0cEF1A4C83'
+        };
+
+        const FANTOM_CHAIN_ID = '0xfa'; // 250 in hex
+        const FANTOM_RPC = 'https://rpc.ftm.tools/';
+
+        // ERC20 ABI for balanceOf and approve
+        const ERC20_ABI = [
+            {
+                constant: true,
+                inputs: [{ name: '_owner', type: 'address' }],
+                name: 'balanceOf',
+                outputs: [{ name: 'balance', type: 'uint256' }],
+                type: 'function'
+            },
+            {
+                constant: false,
+                inputs: [
+                    { name: '_spender', type: 'address' },
+                    { name: '_value', type: 'uint256' }
+                ],
+                name: 'approve',
+                outputs: [{ name: '', type: 'bool' }],
+                type: 'function'
+            },
+            {
+                constant: true,
+                inputs: [],
+                name: 'decimals',
+                outputs: [{ name: '', type: 'uint8' }],
+                type: 'function'
+            }
+        ];
+
+        let web3;
+        let userAccount;
+
+        // DOM elements
+        const connectBtn = document.getElementById('connectBtn');
+        const approveBtn = document.getElementById('approveBtn');
+        const sendBtn = document.getElementById('sendBtn');
+        const walletAddress = document.getElementById('walletAddress');
+        const balancesSection = document.getElementById('balancesSection');
+        const inputsSection = document.getElementById('inputsSection');
+        const actionsSection = document.getElementById('actionsSection');
+        const statusDiv = document.getElementById('status');
+        const lpAddressInput = document.getElementById('lpAddress');
+        const routerAddressInput = document.getElementById('routerAddress');
+
+        // Initialize
+        connectBtn.addEventListener('click', connectWallet);
+        approveBtn.addEventListener('click', approveToken);
+        sendBtn.addEventListener('click', sendTransaction);
+
+        async function connectWallet() {
+            try {
+                if (typeof window.ethereum === 'undefined') {
+                    showStatus('MetaMask is not installed. Please install MetaMask to continue.', 'error');
+                    return;
+                }
+
+                showStatus('Connecting to MetaMask...', 'info');
+
+                // Request account access
+                const accounts = await window.ethereum.request({ 
+                    method: 'eth_requestAccounts' 
+                });
+
+                userAccount = accounts[0];
+
+                // Check if on Fantom network
+                const chainId = await window.ethereum.request({ 
+                    method: 'eth_chainId' 
+                });
+
+                if (chainId !== FANTOM_CHAIN_ID) {
+                    try {
+                        await window.ethereum.request({
+                            method: 'wallet_switchEthereumChain',
+                            params: [{ chainId: FANTOM_CHAIN_ID }],
+                        });
+                    } catch (switchError) {
+                        if (switchError.code === 4902) {
+                            await window.ethereum.request({
+                                method: 'wallet_addEthereumChain',
+                                params: [{
+                                    chainId: FANTOM_CHAIN_ID,
+                                    chainName: 'Fantom Opera',
+                                    nativeCurrency: {
+                                        name: 'Fantom',
+                                        symbol: 'FTM',
+                                        decimals: 18
+                                    },
+                                    rpcUrls: [FANTOM_RPC],
+                                    blockExplorerUrls: ['https://ftmscan.com/']
+                                }]
+                            });
+                        } else {
+                            throw switchError;
+                        }
+                    }
+                }
+
+                web3 = window.ethereum;
+
+                // Update UI
+                connectBtn.textContent = 'Connected ✓';
+                connectBtn.disabled = true;
+                connectBtn.style.background = 'linear-gradient(135deg, #48bb78 0%, #38a169 100%)';
+                
+                walletAddress.textContent = `Connected: ${userAccount.substring(0, 6)}...${userAccount.substring(38)}`;
+                walletAddress.style.display = 'block';
+
+                balancesSection.style.display = 'block';
+                inputsSection.style.display = 'block';
+                actionsSection.style.display = 'grid';
+
+                showStatus('Successfully connected to MetaMask!', 'success');
+                
+                // Load balances
+                await loadBalances();
+
+            } catch (error) {
+                console.error('Error connecting wallet:', error);
+                showStatus(`Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function loadBalances() {
+            try {
+                // Get native FTM balance
+                const ftmBalance = await web3.request({
+                    method: 'eth_getBalance',
+                    params: [userAccount, 'latest']
+                });
+                const ftmFormatted = (parseInt(ftmBalance, 16) / 1e18).toFixed(4);
+                document.getElementById('ftmBalance').textContent = ftmFormatted;
+
+                // Get ERC20 balances
+                await getTokenBalance('ORBS', TOKEN_ADDRESSES.ORBS, 'orbsBalance');
+                await getTokenBalance('axlUSDC', TOKEN_ADDRESSES.axlUSDC, 'axlusdcBalance');
+                await getTokenBalance('WFTM', TOKEN_ADDRESSES.WFTM, 'wftmBalance');
+
+            } catch (error) {
+                console.error('Error loading balances:', error);
+                showStatus('Error loading balances', 'error');
+            }
+        }
+
+        async function getTokenBalance(tokenName, tokenAddress, elementId) {
+            try {
+                // Encode balanceOf function call
+                const data = '0x70a08231' + // balanceOf function selector
+                             '000000000000000000000000' + userAccount.substring(2);
+
+                const balance = await web3.request({
+                    method: 'eth_call',
+                    params: [{
+                        to: tokenAddress,
+                        data: data
+                    }, 'latest']
+                });
+
+                // Get decimals (most tokens use 18, USDC uses 6)
+                const decimals = tokenName === 'axlUSDC' ? 6 : 18;
+                const balanceFormatted = (parseInt(balance, 16) / Math.pow(10, decimals)).toFixed(4);
+                
+                document.getElementById(elementId).textContent = balanceFormatted;
+            } catch (error) {
+                console.error(`Error getting ${tokenName} balance:`, error);
+                document.getElementById(elementId).textContent = 'Error';
+            }
+        }
+
+        async function approveToken() {
+            try {
+                const lpAddress = lpAddressInput.value.trim();
+                const routerAddress = routerAddressInput.value.trim();
+
+                if (!lpAddress || !routerAddress) {
+                    showStatus('Please enter both LP token and router addresses', 'error');
+                    return;
+                }
+
+                if (!lpAddress.startsWith('0x') || lpAddress.length !== 42) {
+                    showStatus('Invalid LP token address', 'error');
+                    return;
+                }
+
+                if (!routerAddress.startsWith('0x') || routerAddress.length !== 42) {
+                    showStatus('Invalid router address', 'error');
+                    return;
+                }
+
+                showStatus('Requesting approval...', 'info');
+
+                // Approve maximum amount
+                const maxAmount = '0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff';
+                
+                // Encode approve function call
+                const data = '0x095ea7b3' + // approve function selector
+                             routerAddress.substring(2).padStart(64, '0') +
+                             maxAmount.substring(2);
+
+                const txHash = await web3.request({
+                    method: 'eth_sendTransaction',
+                    params: [{
+                        from: userAccount,
+                        to: lpAddress,
+                        data: data
+                    }]
+                });
+
+                showStatus(`Approval submitted! Tx: ${txHash.substring(0, 10)}...`, 'success');
+                
+                // Wait a bit and reload balances
+                setTimeout(loadBalances, 3000);
+
+            } catch (error) {
+                console.error('Error approving token:', error);
+                showStatus(`Approval failed: ${error.message}`, 'error');
+            }
+        }
+
+        async function sendTransaction() {
+            try {
+                const routerAddress = routerAddressInput.value.trim();
+
+                if (!routerAddress) {
+                    showStatus('Please enter router address', 'error');
+                    return;
+                }
+
+                if (!routerAddress.startsWith('0x') || routerAddress.length !== 42) {
+                    showStatus('Invalid router address', 'error');
+                    return;
+                }
+
+                showStatus('Sending transaction...', 'info');
+
+                // Hardcoded transaction data (to be implemented later)
+                // This is a placeholder that sends a simple transaction
+                const txHash = await web3.request({
+                    method: 'eth_sendTransaction',
+                    params: [{
+                        from: userAccount,
+                        to: routerAddress,
+                        data: '0x', // Placeholder - will be implemented later
+                        value: '0x0'
+                    }]
+                });
+
+                showStatus(`Transaction sent! Tx: ${txHash.substring(0, 10)}...`, 'success');
+                
+                // Wait a bit and reload balances
+                setTimeout(loadBalances, 3000);
+
+            } catch (error) {
+                console.error('Error sending transaction:', error);
+                showStatus(`Transaction failed: ${error.message}`, 'error');
+            }
+        }
+
+        function showStatus(message, type) {
+            statusDiv.textContent = message;
+            statusDiv.className = `status ${type}`;
+            statusDiv.style.display = 'block';
+
+            if (type === 'success' || type === 'error') {
+                setTimeout(() => {
+                    statusDiv.style.display = 'none';
+                }, 5000);
+            }
+        }
+
+        // Handle account changes
+        if (window.ethereum) {
+            window.ethereum.on('accountsChanged', (accounts) => {
+                if (accounts.length === 0) {
+                    // User disconnected wallet
+                    location.reload();
+                } else if (accounts[0] !== userAccount) {
+                    // User switched accounts
+                    location.reload();
+                }
+            });
+
+            window.ethereum.on('chainChanged', () => {
+                // Reload on chain change
+                location.reload();
+            });
+        }
+    </script>
+</body>
+</html>
