@@ -442,19 +442,28 @@
         async function getTokenBalance(tokenName, tokenAddress, elementId) {
             try {
                 // Encode balanceOf function call
-                const data = '0x70a08231' + // balanceOf function selector
-                             '000000000000000000000000' + userAccount.substring(2);
+                const balanceData = '0x70a08231' + // balanceOf function selector
+                                    '000000000000000000000000' + userAccount.substring(2);
 
                 const balance = await web3.request({
                     method: 'eth_call',
                     params: [{
                         to: tokenAddress,
-                        data: data
+                        data: balanceData
                     }, 'latest']
                 });
 
-                // Get decimals (most tokens use 18, USDC uses 6)
-                const decimals = tokenName === 'axlUSDC' ? 6 : 18;
+                // Fetch decimals dynamically
+                const decimalsData = '0x313ce567'; // decimals function selector
+                const decimalsResult = await web3.request({
+                    method: 'eth_call',
+                    params: [{
+                        to: tokenAddress,
+                        data: decimalsData
+                    }, 'latest']
+                });
+
+                const decimals = parseInt(decimalsResult, 16);
                 const balanceFormatted = (parseInt(balance, 16) / Math.pow(10, decimals)).toFixed(4);
                 
                 document.getElementById(elementId).textContent = balanceFormatted;
@@ -486,7 +495,8 @@
 
                 showStatus('Requesting approval...', 'info');
 
-                // Approve maximum amount
+                // Approve maximum amount (common DeFi pattern to avoid multiple approval transactions)
+                // Note: Users should only approve trusted contracts
                 const maxAmount = '0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff';
                 
                 // Encode approve function call
@@ -505,7 +515,7 @@
 
                 showStatus(`Approval submitted! Tx: ${txHash.substring(0, 10)}...`, 'success');
                 
-                // Wait a bit and reload balances
+                // Reload balances after a short delay (simple approach for better UX)
                 setTimeout(loadBalances, 3000);
 
             } catch (error) {
@@ -530,8 +540,8 @@
 
                 showStatus('Sending transaction...', 'info');
 
-                // Hardcoded transaction data (to be implemented later)
-                // This is a placeholder that sends a simple transaction
+                // Placeholder transaction - actual implementation will be added later
+                // Currently sends an empty transaction to the router address
                 const txHash = await web3.request({
                     method: 'eth_sendTransaction',
                     params: [{
@@ -544,7 +554,7 @@
 
                 showStatus(`Transaction sent! Tx: ${txHash.substring(0, 10)}...`, 'success');
                 
-                // Wait a bit and reload balances
+                // Reload balances after a short delay (simple approach for better UX)
                 setTimeout(loadBalances, 3000);
 
             } catch (error) {
