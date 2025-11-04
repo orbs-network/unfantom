@@ -48,8 +48,9 @@ async function handleAsync(fn) {
     } catch (error) {
         console.error('Error:', error);
         // Ensure error is always shown and doesn't disappear
-        if (!error.message || !error.message.includes('User rejected')) {
-            showStatus(`Error: ${error.message || 'An unknown error occurred'}`, 'error');
+        const errorMessage = error.message || 'An unknown error occurred';
+        if (!errorMessage.includes('User rejected')) {
+            showStatus(`Error: ${errorMessage}`, 'error');
         }
     }
 }
@@ -76,8 +77,9 @@ function padUint256(value) {
 
 async function connectWallet() {
     if (typeof window.ethereum === 'undefined') {
-        showStatus('Error: MetaMask is not installed. Please install MetaMask to continue.', 'error');
-        throw new Error('MetaMask is not installed. Please install MetaMask to continue.');
+        const errorMsg = 'MetaMask is not installed. Please install MetaMask to continue.';
+        showStatus(`Error: ${errorMsg}`, 'error');
+        throw new Error(errorMsg);
     }
 
     showStatus('Connecting to MetaMask...', 'info');
@@ -103,7 +105,7 @@ async function connectWallet() {
             });
             showStatus('Successfully switched to Fantom Opera network!', 'success');
         } catch (switchError) {
-            showStatus(`Error: Failed to switch to Fantom Opera network: ${switchError.message || 'Unknown error'}`, 'error');
+            showStatus(`Error: Failed to switch to Fantom Opera network: ${switchError.message || 'An unknown error occurred'}`, 'error');
             throw switchError;
         }
     }
