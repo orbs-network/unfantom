@@ -41,6 +41,19 @@ connectBtn.addEventListener('click', () => handleAsync(connectWallet));
 approveBtn.addEventListener('click', () => handleAsync(approveToken));
 sendBtn.addEventListener('click', () => handleAsync(removeLiquidity));
 
+// Check if error is a user rejection
+function isUserRejectionError(error) {
+    // MetaMask error code 4001 indicates user rejection
+    if (error.code === 4001) {
+        return true;
+    }
+    // Fallback to message checking for other wallets or error formats
+    const message = error.message || '';
+    return message.includes('User rejected') || 
+           message.includes('User denied') ||
+           message.includes('user rejected');
+}
+
 // Centralized error handling utility
 async function handleAsync(fn) {
     try {
@@ -48,10 +61,8 @@ async function handleAsync(fn) {
     } catch (error) {
         console.error('Error:', error);
         // Ensure error is always shown and doesn't disappear
-        // Check for user rejection by code (4001) or message
-        const isUserRejection = error.code === 4001 || 
-                                (error.message && error.message.includes('User rejected'));
-        if (!isUserRejection) {
+        // Don't show errors for user rejections (intentional cancellations)
+        if (!isUserRejectionError(error)) {
             showStatus(`Error: ${getSafeErrorMessage(error)}`, 'error');
         }
     }
