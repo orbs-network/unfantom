@@ -40,7 +40,13 @@ const routerAddressInput = document.getElementById('routerAddress');
 connectBtn.addEventListener('click', () => handleAsync(connectWallet));
 approveBtn.addEventListener('click', () => handleAsync(approveToken));
 sendBtn.addEventListener('click', () => handleAsync(removeLiquidity));
-lpAddressInput.addEventListener('input', () => handleAsync(updateLpBalance));
+
+// Debounce LP balance updates to avoid excessive API calls
+let lpBalanceTimeout;
+lpAddressInput.addEventListener('input', () => {
+    clearTimeout(lpBalanceTimeout);
+    lpBalanceTimeout = setTimeout(() => handleAsync(updateLpBalance), 500);
+});
 
 // Check if error is a user rejection
 function isUserRejectionError(error) {
@@ -202,7 +208,7 @@ async function updateLpBalance() {
 
     const lpAddress = lpAddressInput.value.trim();
     
-    // Check if address is valid
+    // Check if address is valid (using same validation as validateAddress but without throwing)
     if (!lpAddress || !lpAddress.startsWith('0x') || lpAddress.length !== 42) {
         document.getElementById('lpBalance').textContent = '0.00';
         return;
