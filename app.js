@@ -41,6 +41,13 @@ connectBtn.addEventListener('click', () => handleAsync(connectWallet));
 approveBtn.addEventListener('click', () => handleAsync(approveToken));
 sendBtn.addEventListener('click', () => handleAsync(removeLiquidity));
 
+// Debounce LP balance updates to avoid excessive API calls
+let lpBalanceTimeout;
+lpAddressInput.addEventListener('input', () => {
+    clearTimeout(lpBalanceTimeout);
+    lpBalanceTimeout = setTimeout(() => handleAsync(updateLpBalance), 500);
+});
+
 // Check if error is a user rejection
 function isUserRejectionError(error) {
     // MetaMask error code 4001 indicates user rejection
@@ -192,6 +199,28 @@ async function getTokenBalance(tokenAddress) {
     const balanceFormatted = (parseInt(balance, 16) / Math.pow(10, decimals)).toFixed(4);
     
     return balanceFormatted;
+}
+
+async function updateLpBalance() {
+    if (!web3 || !userAccount) {
+        return; // Not connected yet
+    }
+
+    const lpAddress = lpAddressInput.value.trim();
+    
+    // Check if address is valid (using same validation as validateAddress but without throwing)
+    if (!lpAddress || !lpAddress.startsWith('0x') || lpAddress.length !== 42) {
+        document.getElementById('lpBalance').textContent = '0.00';
+        return;
+    }
+
+    try {
+        const lpBalance = await getTokenBalance(lpAddress);
+        document.getElementById('lpBalance').textContent = lpBalance;
+    } catch (error) {
+        // If there's an error (e.g., invalid token address), show 0.00
+        document.getElementById('lpBalance').textContent = '0.00';
+    }
 }
 
 async function approveToken() {
