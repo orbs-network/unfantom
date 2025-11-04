@@ -48,10 +48,8 @@ function isUserRejectionError(error) {
         return true;
     }
     // Fallback to message checking for other wallets or error formats
-    const message = error.message || '';
-    return message.includes('User rejected') || 
-           message.includes('User denied') ||
-           message.includes('user rejected');
+    const message = (error.message || '').toLowerCase();
+    return message.includes('user rejected') || message.includes('user denied');
 }
 
 // Centralized error handling utility
@@ -95,9 +93,7 @@ function padUint256(value) {
 
 async function connectWallet() {
     if (typeof window.ethereum === 'undefined') {
-        const errorMsg = 'MetaMask is not installed. Please install MetaMask to continue.';
-        showStatus(`Error: ${errorMsg}`, 'error');
-        throw new Error(errorMsg);
+        throw new Error('MetaMask is not installed. Please install MetaMask to continue.');
     }
 
     showStatus('Connecting to MetaMask...', 'info');
