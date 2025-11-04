@@ -7,6 +7,16 @@ const TOKEN_ADDRESSES = {
 
 const FANTOM_CHAIN_ID = '0xfa'; // 250 in hex
 
+// Function selectors as constants
+const SELECTORS = {
+    BALANCE_OF: '0x70a08231',
+    DECIMALS: '0x313ce567',
+    APPROVE: '0x095ea7b3',
+    TOKEN0: '0x0dfe1681',
+    TOKEN1: '0xd21220a7',
+    REMOVE_LIQUIDITY: '0xbaa2abde'
+};
+
 let web3;
 let userAccount;
 
@@ -25,21 +35,7 @@ const routerAddressInput = document.getElementById('routerAddress');
 // Initialize
 connectBtn.addEventListener('click', () => handleAsync(connectWallet));
 approveBtn.addEventListener('click', () => handleAsync(approveToken));
-sendBtn.addEventListener('click', () => handleAsync(sendTransaction));
-
-// Simplified function selector computation
-// For ERC20 and Uniswap V2 functions, we use known selectors
-function computeFunctionSelector(signature) {
-    const selectors = {
-        'balanceOf(address)': '0x70a08231',
-        'decimals()': '0x313ce567',
-        'approve(address,uint256)': '0x095ea7b3',
-        'token0()': '0x0dfe1681',
-        'token1()': '0xd21220a7',
-        'removeLiquidity(address,address,uint256,uint256,uint256,address,uint256)': '0xbaa2abde'
-    };
-    return selectors[signature] || '0x00000000';
-}
+sendBtn.addEventListener('click', () => handleAsync(removeLiquidity));
 
 // Centralized error handling utility
 async function handleAsync(fn) {
@@ -48,6 +44,16 @@ async function handleAsync(fn) {
     } catch (error) {
         console.error('Error:', error);
         showStatus(`Error: ${error.message}`, 'error');
+    }
+}
+
+// Validation utility
+function validateAddress(address, fieldName) {
+    if (!address) {
+        throw new Error(`Please enter ${fieldName}`);
+    }
+    if (!address.startsWith('0x') || address.length !== 42) {
+        throw new Error(`Invalid ${fieldName}`);
     }
 }
 
@@ -63,8 +69,7 @@ function padUint256(value) {
 
 async function connectWallet() {
     if (typeof window.ethereum === 'undefined') {
-        showStatus('MetaMask is not installed. Please install MetaMask to continue.', 'error');
-        return;
+        throw new Error('MetaMask is not installed. Please install MetaMask to continue.');
     }
 
     showStatus('Connecting to MetaMask...', 'info');
@@ -82,29 +87,7 @@ async function connectWallet() {
     });
 
     if (chainId !== FANTOM_CHAIN_ID) {
-        await window.ethereum.request({
-            method: 'wallet_switchEthereumChain',
-            params: [{ chainId: FANTOM_CHAIN_ID }],
-        }).catch(async (switchError) => {
-            if (switchError.code === 4902) {
-                await window.ethereum.request({
-                    method: 'wallet_addEthereumChain',
-                    params: [{
-                        chainId: FANTOM_CHAIN_ID,
-                        chainName: 'Fantom Opera',
-                        nativeCurrency: {
-                            name: 'Fantom',
-                            symbol: 'FTM',
-                            decimals: 18
-                        },
-                        rpcUrls: ['https://rpc.ftm.tools/'],
-                        blockExplorerUrls: ['https://ftmscan.com/']
-                    }]
-                });
-            } else {
-                throw switchError;
-            }
-        });
+        throw new Error('Please switch to Fantom Opera network in MetaMask');
     }
 
     web3 = window.ethereum;
@@ -151,11 +134,8 @@ async function loadBalances() {
 
 async function getTokenBalance(tokenAddress) {
     // Fetch balance and decimals in parallel
-    const balanceSelector = computeFunctionSelector('balanceOf(address)');
-    const decimalsSelector = computeFunctionSelector('decimals()');
-    
-    const balanceData = balanceSelector + padAddress(userAccount);
-    const decimalsData = decimalsSelector;
+    const balanceData = SELECTORS.BALANCE_OF + padAddress(userAccount);
+    const decimalsData = SELECTORS.DECIMALS;
 
     const [balance, decimalsResult] = await Promise.all([
         web3.request({
@@ -184,20 +164,8 @@ async function approveToken() {
     const lpAddress = lpAddressInput.value.trim();
     const routerAddress = routerAddressInput.value.trim();
 
-    if (!lpAddress || !routerAddress) {
-        showStatus('Please enter both LP token and router addresses', 'error');
-        return;
-    }
-
-    if (!lpAddress.startsWith('0x') || lpAddress.length !== 42) {
-        showStatus('Invalid LP token address', 'error');
-        return;
-    }
-
-    if (!routerAddress.startsWith('0x') || routerAddress.length !== 42) {
-        showStatus('Invalid router address', 'error');
-        return;
-    }
+    validateAddress(lpAddress, 'LP token address');
+    validateAddress(routerAddress, 'router address');
 
     showStatus('Requesting approval...', 'info');
 
@@ -206,8 +174,7 @@ async function approveToken() {
     const maxAmount = '0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff';
     
     // Encode approve function call
-    const approveSelector = computeFunctionSelector('approve(address,uint256)');
-    const data = approveSelector + padAddress(routerAddress) + padUint256(maxAmount);
+    const data = SELECTORS.APPROVE + padAddress(routerAddress) + padUint256(maxAmount);
 
     const txHash = await web3.request({
         method: 'eth_sendTransaction',
@@ -224,44 +191,36 @@ async function approveToken() {
     setTimeout(() => handleAsync(loadBalances), 3000);
 }
 
-async function sendTransaction() {
+async function removeLiquidity() {
     const lpAddress = lpAddressInput.value.trim();
     const routerAddress = routerAddressInput.value.trim();
 
-    if (!lpAddress || !routerAddress) {
-        showStatus('Please enter both LP token and router addresses', 'error');
-        return;
-    }
-
-    if (!lpAddress.startsWith('0x') || lpAddress.length !== 42) {
-        showStatus('Invalid LP token address', 'error');
-        return;
-    }
-
-    if (!routerAddress.startsWith('0x') || routerAddress.length !== 42) {
-        showStatus('Invalid router address', 'error');
-        return;
-    }
+    validateAddress(lpAddress, 'LP token address');
+    validateAddress(routerAddress, 'router address');
 
     showStatus('Reading LP token info...', 'info');
 
-    // Get token0 and token1 from LP address
-    const token0Selector = computeFunctionSelector('token0()');
-    const token1Selector = computeFunctionSelector('token1()');
-
-    const [token0Result, token1Result] = await Promise.all([
+    // Get token0, token1, and user's LP balance in parallel
+    const [token0Result, token1Result, lpBalanceResult] = await Promise.all([
         web3.request({
             method: 'eth_call',
             params: [{
                 to: lpAddress,
-                data: token0Selector
+                data: SELECTORS.TOKEN0
             }, 'latest']
         }),
         web3.request({
             method: 'eth_call',
             params: [{
                 to: lpAddress,
-                data: token1Selector
+                data: SELECTORS.TOKEN1
+            }, 'latest']
+        }),
+        web3.request({
+            method: 'eth_call',
+            params: [{
+                to: lpAddress,
+                data: SELECTORS.BALANCE_OF + padAddress(userAccount)
             }, 'latest']
         })
     ]);
@@ -269,22 +228,19 @@ async function sendTransaction() {
     // Extract addresses from results (last 40 hex chars)
     const token0 = '0x' + token0Result.slice(-40);
     const token1 = '0x' + token1Result.slice(-40);
+    const liquidityAmount = '0x' + lpBalanceResult.slice(2);
 
     showStatus('Sending removeLiquidity transaction...', 'info');
 
     // removeLiquidity(address tokenA, address tokenB, uint liquidity, uint amountAMin, uint amountBMin, address to, uint deadline)
-    const removeLiquiditySelector = computeFunctionSelector('removeLiquidity(address,address,uint256,uint256,uint256,address,uint256)');
-    
-    // Hardcoded parameters for now (these should be calculated properly in production)
-    const liquidity = '0x0000000000000000000000000000000000000000000000000000000000000000'; // 0 for now
     const amountAMin = '0x0000000000000000000000000000000000000000000000000000000000000000'; // 0
     const amountBMin = '0x0000000000000000000000000000000000000000000000000000000000000000'; // 0
-    const deadline = '0x' + (Math.floor(Date.now() / 1000) + 3600).toString(16).padStart(64, '0'); // 1 hour from now
+    const deadline = '0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff'; // max uint256
 
-    const data = removeLiquiditySelector +
+    const data = SELECTORS.REMOVE_LIQUIDITY +
                  padAddress(token0) +
                  padAddress(token1) +
-                 liquidity +
+                 padUint256(liquidityAmount) +
                  amountAMin +
                  amountBMin +
                  padAddress(userAccount) +
