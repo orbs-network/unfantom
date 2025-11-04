@@ -48,8 +48,8 @@ async function handleAsync(fn) {
     } catch (error) {
         console.error('Error:', error);
         // Ensure error is always shown and doesn't disappear
-        if (!error.message.includes('User rejected')) {
-            showStatus(`Error: ${error.message}`, 'error');
+        if (!error.message || !error.message.includes('User rejected')) {
+            showStatus(`Error: ${error.message || 'An unknown error occurred'}`, 'error');
         }
     }
 }
@@ -96,11 +96,16 @@ async function connectWallet() {
 
     if (chainId !== FANTOM_CHAIN_ID) {
         showStatus('Wrong network detected. Attempting to switch to Fantom Opera network...', 'info');
-        await window.ethereum.request({
-            method: 'wallet_switchEthereumChain',
-            params: [{ chainId: FANTOM_CHAIN_ID }],
-        });
-        showStatus('Successfully switched to Fantom Opera network!', 'success');
+        try {
+            await window.ethereum.request({
+                method: 'wallet_switchEthereumChain',
+                params: [{ chainId: FANTOM_CHAIN_ID }],
+            });
+            showStatus('Successfully switched to Fantom Opera network!', 'success');
+        } catch (switchError) {
+            showStatus(`Error: Failed to switch to Fantom Opera network: ${switchError.message || 'Unknown error'}`, 'error');
+            throw switchError;
+        }
     }
 
     web3 = window.ethereum;
