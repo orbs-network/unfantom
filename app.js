@@ -48,11 +48,18 @@ async function handleAsync(fn) {
     } catch (error) {
         console.error('Error:', error);
         // Ensure error is always shown and doesn't disappear
-        const errorMessage = error.message || 'An unknown error occurred';
-        if (!errorMessage.includes('User rejected')) {
-            showStatus(`Error: ${errorMessage}`, 'error');
+        // Check for user rejection by code (4001) or message
+        const isUserRejection = error.code === 4001 || 
+                                (error.message && error.message.includes('User rejected'));
+        if (!isUserRejection) {
+            showStatus(`Error: ${getSafeErrorMessage(error)}`, 'error');
         }
     }
+}
+
+// Utility to safely get error message
+function getSafeErrorMessage(error) {
+    return error.message || 'An unknown error occurred';
 }
 
 // Validation utility
@@ -105,7 +112,7 @@ async function connectWallet() {
             });
             showStatus('Successfully switched to Fantom Opera network!', 'success');
         } catch (switchError) {
-            showStatus(`Error: Failed to switch to Fantom Opera network: ${switchError.message || 'An unknown error occurred'}`, 'error');
+            showStatus(`Error: Failed to switch to Fantom Opera network: ${getSafeErrorMessage(switchError)}`, 'error');
             throw switchError;
         }
     }
