@@ -119,8 +119,8 @@ async function connectWallet() {
             });
             showStatus('Successfully switched to Fantom Opera network!', 'success');
         } catch (switchError) {
-            showStatus(`Error: Failed to switch to Fantom Opera network: ${getSafeErrorMessage(switchError)}`, 'error');
-            throw switchError;
+            // Re-throw with custom message - handleAsync will display it
+            throw new Error(`Failed to switch to Fantom Opera network: ${getSafeErrorMessage(switchError)}`);
         }
     }
 
