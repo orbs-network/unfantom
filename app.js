@@ -54,17 +54,6 @@ async function handleAsync(fn) {
     }
 }
 
-// Function to enable sections after connection
-function enableConnectedSections() {
-    // Enable inputs
-    lpAddressInput.disabled = false;
-    routerAddressInput.disabled = false;
-    
-    // Enable buttons
-    approveBtn.disabled = false;
-    sendBtn.disabled = false;
-}
-
 // Validation utility
 function validateAddress(address, fieldName) {
     if (!address) {
@@ -107,40 +96,11 @@ async function connectWallet() {
 
     if (chainId !== FANTOM_CHAIN_ID) {
         showStatus('Wrong network detected. Attempting to switch to Fantom Opera network...', 'info');
-        try {
-            await window.ethereum.request({
-                method: 'wallet_switchEthereumChain',
-                params: [{ chainId: FANTOM_CHAIN_ID }],
-            });
-            showStatus('Successfully switched to Fantom Opera network!', 'success');
-        } catch (switchError) {
-            // This error code indicates that the chain has not been added to MetaMask
-            if (switchError.code === 4902) {
-                try {
-                    await window.ethereum.request({
-                        method: 'wallet_addEthereumChain',
-                        params: [{
-                            chainId: FANTOM_CHAIN_ID,
-                            chainName: 'Fantom Opera',
-                            nativeCurrency: {
-                                name: 'Fantom',
-                                symbol: 'FTM',
-                                decimals: 18
-                            },
-                            rpcUrls: ['https://rpc.ftm.tools/'],
-                            blockExplorerUrls: ['https://ftmscan.com/']
-                        }]
-                    });
-                    showStatus('Fantom Opera network added successfully!', 'success');
-                } catch (addError) {
-                    showStatus(`Error: Failed to add Fantom Opera network: ${addError.message}`, 'error');
-                    throw new Error(`Failed to add Fantom Opera network: ${addError.message}`);
-                }
-            } else {
-                showStatus(`Error: Failed to switch to Fantom Opera network: ${switchError.message}`, 'error');
-                throw new Error(`Failed to switch to Fantom Opera network: ${switchError.message}`);
-            }
-        }
+        await window.ethereum.request({
+            method: 'wallet_switchEthereumChain',
+            params: [{ chainId: FANTOM_CHAIN_ID }],
+        });
+        showStatus('Successfully switched to Fantom Opera network!', 'success');
     }
 
     web3 = window.ethereum;
@@ -153,8 +113,9 @@ async function connectWallet() {
     walletAddress.textContent = `Connected: ${userAccount}`;
     walletAddress.style.display = 'block';
 
-    // Enable sections (they are already visible for consistent layout)
-    enableConnectedSections();
+    balancesSection.style.display = 'block';
+    inputsSection.style.display = 'block';
+    actionsSection.style.display = 'grid';
 
     showStatus('Successfully connected to MetaMask!', 'success');
     

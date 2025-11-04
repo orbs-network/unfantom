@@ -87,11 +87,6 @@
             color: #6b7280;
         }
 
-        input[type="text"]:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
         .button {
             width: 100%;
             padding: 15px;
@@ -248,7 +243,7 @@
             <div id="walletAddress" class="wallet-address" style="display: none;"></div>
         </div>
 
-        <div id="balancesSection" class="section">
+        <div id="balancesSection" class="section" style="display: none;">
             <div class="section-title">Your Balances</div>
             <div class="balances">
                 <div class="balance-item">
@@ -270,21 +265,21 @@
             </div>
         </div>
 
-        <div id="inputsSection" class="section">
+        <div id="inputsSection" class="section" style="display: none;">
             <div class="section-title">Transaction Details</div>
             <div class="input-group">
                 <label for="lpAddress">LP ERC20 Token Address</label>
-                <input type="text" id="lpAddress" placeholder="0x..." disabled />
+                <input type="text" id="lpAddress" placeholder="0x..." />
             </div>
             <div class="input-group">
                 <label for="routerAddress">Router Address (Spender)</label>
-                <input type="text" id="routerAddress" placeholder="0x..." disabled />
+                <input type="text" id="routerAddress" placeholder="0x..." />
             </div>
         </div>
 
-        <div id="actionsSection" class="button-group">
-            <button id="approveBtn" class="button button-secondary" disabled>Approve</button>
-            <button id="sendBtn" class="button button-success" disabled>Remove Liquidity</button>
+        <div id="actionsSection" class="button-group" style="display: none;">
+            <button id="approveBtn" class="button button-secondary">Approve</button>
+            <button id="sendBtn" class="button button-success">Remove Liquidity</button>
         </div>
 
         <div id="status" class="status" style="display: none;"></div>
