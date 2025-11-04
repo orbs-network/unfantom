@@ -41,14 +41,34 @@ connectBtn.addEventListener('click', () => handleAsync(connectWallet));
 approveBtn.addEventListener('click', () => handleAsync(approveToken));
 sendBtn.addEventListener('click', () => handleAsync(removeLiquidity));
 
+// Check if error is a user rejection
+function isUserRejectionError(error) {
+    // MetaMask error code 4001 indicates user rejection
+    if (error.code === 4001) {
+        return true;
+    }
+    // Fallback to message checking for other wallets or error formats
+    const message = (error.message || '').toLowerCase();
+    return message.includes('user rejected') || message.includes('user denied');
+}
+
 // Centralized error handling utility
 async function handleAsync(fn) {
     try {
         await fn();
     } catch (error) {
         console.error('Error:', error);
-        showStatus(`Error: ${error.message}`, 'error');
+        // Ensure error is always shown and doesn't disappear
+        // Don't show errors for user rejections (intentional cancellations)
+        if (!isUserRejectionError(error)) {
+            showStatus(`Error: ${getSafeErrorMessage(error)}`, 'error');
+        }
     }
+}
+
+// Utility to safely get error message
+function getSafeErrorMessage(error) {
+    return error.message || 'An unknown error occurred';
 }
 
 // Validation utility
@@ -91,7 +111,17 @@ async function connectWallet() {
     });
 
     if (chainId !== FANTOM_CHAIN_ID) {
-        throw new Error('Please switch to Fantom Opera network in MetaMask');
+        showStatus('Wrong network detected. Attempting to switch to Fantom Opera network...', 'info');
+        try {
+            await window.ethereum.request({
+                method: 'wallet_switchEthereumChain',
+                params: [{ chainId: FANTOM_CHAIN_ID }],
+            });
+            showStatus('Successfully switched to Fantom Opera network!', 'success');
+        } catch (switchError) {
+            // Re-throw with custom message - handleAsync will display it
+            throw new Error(`Failed to switch to Fantom Opera network: ${getSafeErrorMessage(switchError)}`);
+        }
     }
 
     web3 = window.ethereum;
@@ -264,12 +294,7 @@ function showStatus(message, type) {
     statusDiv.textContent = message;
     statusDiv.className = `status ${type}`;
     statusDiv.style.display = 'block';
-
-    if (type === 'success' || type === 'error') {
-        setTimeout(() => {
-            statusDiv.style.display = 'none';
-        }, 5000);
-    }
+    // Keep status messages visible - don't auto-hide them
 }
 
 // Handle account changes
