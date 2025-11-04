@@ -17,6 +17,10 @@ const SELECTORS = {
     REMOVE_LIQUIDITY: '0xbaa2abde'
 };
 
+// Constants for transaction parameters
+const MAX_UINT256 = '0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff';
+const ZERO = '0x0';
+
 let web3;
 let userAccount;
 
@@ -171,10 +175,9 @@ async function approveToken() {
 
     // Approve maximum amount (common DeFi pattern to avoid multiple approval transactions)
     // Note: Users should only approve trusted contracts
-    const maxAmount = '0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff';
     
     // Encode approve function call
-    const data = SELECTORS.APPROVE + padAddress(routerAddress) + padUint256(maxAmount);
+    const data = SELECTORS.APPROVE + padAddress(routerAddress) + padUint256(MAX_UINT256);
 
     const txHash = await web3.request({
         method: 'eth_sendTransaction',
@@ -233,18 +236,14 @@ async function removeLiquidity() {
     showStatus('Sending removeLiquidity transaction...', 'info');
 
     // removeLiquidity(address tokenA, address tokenB, uint liquidity, uint amountAMin, uint amountBMin, address to, uint deadline)
-    const amountAMin = '0x0000000000000000000000000000000000000000000000000000000000000000'; // 0
-    const amountBMin = '0x0000000000000000000000000000000000000000000000000000000000000000'; // 0
-    const deadline = '0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff'; // max uint256
-
     const data = SELECTORS.REMOVE_LIQUIDITY +
                  padAddress(token0) +
                  padAddress(token1) +
                  padUint256(liquidityAmount) +
-                 amountAMin +
-                 amountBMin +
+                 padUint256(ZERO) +
+                 padUint256(ZERO) +
                  padAddress(userAccount) +
-                 deadline;
+                 padUint256(MAX_UINT256);
 
     const txHash = await web3.request({
         method: 'eth_sendTransaction',
